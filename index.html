@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banda Click 📍</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; 
+        }
+        .header { position: sticky; top: 0; background: rgba(245, 247, 250, 0.9); width: 100%; text-align: center; padding: 10px; z-index: 100; backdrop-filter: blur(5px); }
+        h1 { color: #2c3e50; font-size: 1.8rem; margin-bottom: 10px; }
+        
+        /* Buscador Moderno */
+        #buscador {
+            width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 50px;
+            border: 2px solid #fff; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            outline: none; font-size: 1rem; margin-bottom: 20px; transition: 0.3s;
+        }
+        #buscador:focus { border-color: #3498db; box-shadow: 0 4px 20px rgba(52, 152, 219, 0.2); }
+
+        #contenedor { width: 100%; max-width: 450px; }
+        
+        .card { 
+            background: white; border-radius: 25px; overflow: hidden; margin-bottom: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: 0.3s; border: 1px solid #eee;
+        }
+        
+        /* Foto del Local */
+        .foto-local { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+
+        .info-container { padding: 20px; text-align: center; }
+        h2 { color: #2c3e50; font-size: 1.4rem; margin-bottom: 5px; }
+        .rubro-tag { color: #95a5a6; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; margin-bottom: 12px; display: block; }
+        
+        .badge { 
+            display: inline-block; padding: 6px 20px; border-radius: 50px; 
+            color: white; font-weight: bold; font-size: 0.75rem; margin-bottom: 20px;
+        }
+        
+        .btn-wa { 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: #25D366; color: white; padding: 15px; border-radius: 18px; 
+            text-decoration: none; font-weight: bold; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Banda Click 📍</h1>
+        <input type="text" id="buscador" placeholder="Buscar taller, kiosco, rubro...">
+    </div>
+
+    <div id="contenedor">Cargando comercios...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADScvwwDcuQo2Lb5qqvfju8qKpvhFgWfU",
+            authDomain: "banda-click.firebaseapp.com",
+            projectId: "banda-click",
+            storageBucket: "banda-click.firebasestorage.app",
+            messagingSenderId: "615050559741",
+            appId: "1:615050559741:web:9702ecfe6e34650072be94"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const contenedor = document.getElementById('contenedor');
+        const buscador = document.getElementById('buscador');
+        let todosLosLocales = [];
+
+        onSnapshot(collection(db, "negocios"), (snapshot) => {
+            todosLosLocales = snapshot.docs.map(doc => doc.data());
+            renderizarLocales(todosLosLocales);
+        });
+
+        function renderizarLocales(lista) {
+            contenedor.innerHTML = '';
+            lista.forEach((local) => {
+                const estaAbierto = local.abierto === true || String(local.abierto).toLowerCase().trim() === "true";
+                const colorFondo = estaAbierto ? '#25D366' : '#e74c3c';
+                const textoEstado = estaAbierto ? 'Abierto Ahora' : 'Cerrado';
+                const fotoDefault = "https://via.placeholder.com/400x200?text=Banda+Click";
+
+                contenedor.innerHTML += `
+                    <div class="card">
+                        <img src="${local.imagen || fotoDefault}" class="foto-local" style="width:100%; height:200px; object-fit:cover;" alt="Local">
+                        <div class="info-container">
+                            <span class="rubro-tag">📍 ${local.rubro || 'Comercio'}</span>
+                            <h2>${local.nombre}</h2>
+                            <span class="badge" style="background:${colorFondo}">${textoEstado}</span>
+                            <a href="https://wa.me/${local.WhatsApp}" class="btn-wa">
+                                📱 Consultar por WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Lógica del Buscador
+        buscador.addEventListener('input', (e) => {
+            const termino = e.target.value.toLowerCase();
+            const filtrados = todosLosLocales.filter(local => 
+                local.nombre.toLowerCase().includes(termino) || 
+                (local.rubro && local.rubro.toLowerCase().includes(termino))
+            );
+            renderizarLocales(filtrados);
+        });
+    </script>
+</body>
+</html>
