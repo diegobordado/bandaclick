@@ -5,34 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Banda Click 📲</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
-        .form-admin { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .mensaje { text-align: center; color: green; margin-top: 10px; display: none; }
+        body { font-family: sans-serif; padding: 20px; background: #121212; color: white; }
+        .form-admin { background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); max-width: 400px; margin: auto; border: 1px solid #333; }
+        h2 { text-align: center; color: #00ff88; }
+        label { display: block; margin-top: 10px; font-size: 0.9em; color: #ccc; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border: 1px solid #333; border-radius: 8px; background: #2a2a2a; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #00ff88; color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
+        button:hover { background: #00cc6e; }
+        .mensaje { text-align: center; color: #00ff88; margin-top: 10px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="form-admin">
         <h2>Añadir Nuevo Local 📍</h2>
-        <input type="text" id="nombre" placeholder="Nombre del negocio (ej: Agüero Competición)">
-        <input type="text" id="rubro" placeholder="Rubro (ej: taller, kiosco, drugstore)">
-        <input type="text" id="whatsapp" placeholder="WhatsApp (ej: +54381...)">
-        <input type="text" id="imagen" placeholder="Link de la foto (.jpg)">
-        <select id="abierto">
-            <option value="true">Abierto</option>
-            <option value="false">Cerrado</option>
-        </select>
+        
+        <label>Nombre del Negocio:</label>
+        <input type="text" id="nombre" placeholder="Ej: Agüero Competición">
+        
+        <label>Rubro:</label>
+        <input type="text" id="rubro" placeholder="Ej: Taller, Kiosco">
+
+        <label>Dirección:</label>
+        <input type="text" id="direccion" placeholder="Ej: Av. Libertador 123">
+        
+        <label>WhatsApp (solo números):</label>
+        <input type="text" id="whatsapp" placeholder="3813012096">
+        
+        <label>Link de la foto (URL):</label>
+        <input type="text" id="imagen" placeholder="https://...foto.jpg">
+
+        <label>Instagram (Link completo):</label>
+        <input type="text" id="instagram" placeholder="https://instagram.com/perfil">
+
+        <label>Video (YouTube/Reel):</label>
+        <input type="text" id="video" placeholder="https://youtube.com/...">
+
         <button id="btnGuardar">🚀 Cargar a Banda Click</button>
         <p class="mensaje" id="msjExito">¡Local cargado con éxito!</p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // USAMOS TU MISMA CONFIGURACIÓN
         const firebaseConfig = {
             apiKey: "AIzaSyADScvwwDcuQo2Lb5qqvfju8qKpvhFgWfU",
             authDomain: "banda-click.firebaseapp.com",
@@ -46,25 +62,39 @@
         const db = getFirestore(app);
 
         document.getElementById('btnGuardar').addEventListener('click', async () => {
-            const nombre = document.getElementById('nombre').value;
-            const rubro = document.getElementById('rubro').value.toLowerCase(); // Para que el buscador no falle
-            const whatsapp = document.getElementById('whatsapp').value;
-            const imagen = document.getElementById('imagen').value;
-            const abierto = document.getElementById('abierto').value === "true";
+            const btn = document.getElementById('btnGuardar');
+            btn.innerText = "Cargando...";
+            btn.disabled = true;
+
+            const datos = {
+                nombre: document.getElementById('nombre').value,
+                rubro: document.getElementById('rubro').value,
+                direccion: document.getElementById('direccion').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                imagen: document.getElementById('imagen').value,
+                instagram: document.getElementById('instagram').value,
+                video: document.getElementById('video').value,
+                fecha: serverTimestamp()
+            };
 
             try {
-                await addDoc(collection(db, "negocios"), {
-                    nombre: nombre,
-                    rubro: rubro,
-                    WhatsApp: whatsapp,
-                    imagen: imagen,
-                    abierto: abierto
-                });
+                await addDoc(collection(db, "negocios"), datos);
+                
                 document.getElementById('msjExito').style.display = 'block';
-                // Limpiar formulario
+                btn.innerText = "🚀 Cargar a Banda Click";
+                btn.disabled = false;
+
+                // Limpiar campos
                 document.querySelectorAll('input').forEach(i => i.value = '');
+                
+                setTimeout(() => {
+                    document.getElementById('msjExito').style.display = 'none';
+                }, 3000);
+
             } catch (e) {
-                alert("Error al cargar: " + e);
+                alert("Error al guardar: " + e.message);
+                btn.disabled = false;
+                btn.innerText = "🚀 Cargar a Banda Click";
             }
         });
     </script>
